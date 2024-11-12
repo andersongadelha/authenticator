@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: authenticator
+  datasource:
+    url: jdbc:postgresql://localhost:5432/security
+    username: postgres
+    password: root
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+      dialect: org.hibernate.dialect.PostgreSQLDialect
