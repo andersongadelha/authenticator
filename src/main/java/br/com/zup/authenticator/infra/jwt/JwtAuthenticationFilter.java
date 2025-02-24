@@ -1,5 +1,6 @@
 package br.com.zup.authenticator.infra.jwt;
 
+import br.com.zup.authenticator.services.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,6 +21,8 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
+    @Autowired
+    private JwtService jwtService;
 
     private UserDetailsService userDetailsService;
 
@@ -38,7 +41,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
 
         // Get JWT token from HTTP request
-        String token = getTokenFromRequest(request);
+        String token = getTokenFromRequest();
 
         // Validate Token
         if(StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)){
@@ -61,14 +64,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    // Extract the token
-    private String getTokenFromRequest(HttpServletRequest request){
-        String bearerToken = request.getHeader("Authorization");
-
-        if(StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")){
-            return bearerToken.substring(7, bearerToken.length());
-        }
-
-        return null;
+    private String getTokenFromRequest() {
+        return jwtService.getCurrentJwt();
     }
 }

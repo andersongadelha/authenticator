@@ -1,8 +1,10 @@
 package br.com.zup.authenticator.controllers;
 
 import br.com.zup.authenticator.controllers.dtos.RegisterUserDto;
+import br.com.zup.authenticator.controllers.dtos.UserResponseDto;
 import br.com.zup.authenticator.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,4 +21,10 @@ public class UserController {
     public void registerUser(@RequestBody RegisterUserDto registerUserDto){
         userService.registerUser(registerUserDto);
     }
+
+    @GetMapping
+    public UserResponseDto getDetails() {
+        return userService.getDetails();
+    }
+
 }
