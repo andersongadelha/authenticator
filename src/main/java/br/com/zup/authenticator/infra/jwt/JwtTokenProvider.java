@@ -1,17 +1,23 @@
 package br.com.zup.authenticator.infra.jwt;
 
+import br.com.zup.authenticator.models.Role;
+import br.com.zup.authenticator.models.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.security.Key;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
@@ -45,7 +51,6 @@ public class JwtTokenProvider {
         return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
     }
 
-    // extract username from JWT token
     public String getUsername(String token){
 
         return Jwts.parser()
@@ -56,7 +61,6 @@ public class JwtTokenProvider {
                 .getSubject();
     }
 
-    // validate JWT token
     public boolean validateToken(String token){
         Jwts.parser()
                 .verifyWith((SecretKey) key())
@@ -76,5 +80,42 @@ public class JwtTokenProvider {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+    }
+
+    public UsernamePasswordAuthenticationToken getAuthentication(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith((SecretKey) key())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+
+        String username = claims.getSubject();
+
+        String roles = claims.get("roles", String.class);
+        List<String> rolesList = Arrays.asList(roles.split(","));
+
+        List<SimpleGrantedAuthority> authorities = rolesList.stream()
+                .map(SimpleGrantedAuthority::new)
+                .collect(Collectors.toList());
+
+        return new UsernamePasswordAuthenticationToken(username, null, authorities);
+    }
+
+    public String generateTokenFromUser(User user) {
+        Date currentDate = new Date();
+        Date expireDate = new Date(currentDate.getTime() + jwtExpirationDate);
+
+        String authorities = user.getRoles().stream()
+                .map(Role::getName)
+                .collect(Collectors.joining(","));
+
+        return Jwts.builder()
+                .subject(user.getUsername())
+                .issuedAt(new Date())
+                .expiration(expireDate)
+                .claim("roles", authorities)
+                .claim("department", setDepartment(authorities))
+                .signWith(SignatureAlgorithm.HS256, key())
+                .compact();
     }
 }
