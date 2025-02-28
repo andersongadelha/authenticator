@@ -11,10 +11,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anySet;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -42,6 +45,9 @@ public class UserServiceTest {
     @Mock
     private BCryptPasswordEncoder bCryptPasswordEncoder;
 
+    @Captor
+    private ArgumentCaptor<User> userArgumentCaptor;
+
     @Test
     public void deveRegistrarUsuarioComSucesso() {
         // Arrange
@@ -62,7 +68,9 @@ public class UserServiceTest {
         verify(userRepository).existsByUsername("testUser");
         verify(bCryptPasswordEncoder).encode("testPassword");
         verify(roleRepository).saveAll(anySet());
-        verify(userRepository).save(any(User.class));
+        verify(userRepository).save(userArgumentCaptor.capture());
+        User userSaved = userArgumentCaptor.getValue();
+        assertEquals("encodedPassword",userSaved.getPassword());
     }
 
     @Test
